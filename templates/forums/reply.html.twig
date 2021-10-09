@@ -1,0 +1,38 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <nav class="col-md-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('forums_index') }}">Forums</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('forums_forum_view', {forum: forum.id, forumSlug: forum.slug}) }}">
+                            {{ forum.title }}
+                        </a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('forums_thread_view', {
+                            forum: forum.id,
+                            forumSlug: forum.slug,
+                            thread: thread.id,
+                            threadSlug: thread.slug
+                        }) }}">
+                            {{ thread.title }}
+                        </a></li>
+                </ol>
+            </nav>
+        </div>
+        <div class="row">
+            <main class="col-md-12">
+                <h1>{{ thread.title }}</h1>
+                <p class="border-bottom">{{ thread.description }}</p>
+
+                <h2>Posting Reply</h2>
+
+                {{ form_start(form) }}
+                {{ form_widget(form) }}
+                <button type="submit">Submit</button>
+                {{ form_end(form) }}
+            </main>
+        </div>
+    </div>
+{% endblock %}

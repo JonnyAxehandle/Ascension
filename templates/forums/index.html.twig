@@ -1,0 +1,39 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <nav class="col-md-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('forums_index') }}">Forums</a></li>
+                </ol>
+            </nav>
+        </div>
+        <div class="row">
+            <main class="col-md-12">
+                <h1>Forums</h1>
+                {% for category in categories %}
+                    <section class="card mb-3">
+                        <header class="card-header">
+                            <h2 class="card-title m-0">{{ category.title }}</h2>
+                        </header>
+                        <table class="table table-striped m-0">
+                            <tbody>
+                            {% for forum in category.children %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ path('forums_forum_view', {forum: forum.id, forumSlug: forum.slug}) }}">
+                                            {{ forum.title }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </section>
+                {% endfor %}
+            </main>
+        </div>
+    </div>
+{% endblock %}

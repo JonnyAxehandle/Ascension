@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ForumRepository;
+use App\Utilities\Slug;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -126,6 +127,6 @@ class Forum
 
     public function getSlug(): string
     {
-        return "slug";
+        return Slug::slugify($this->getTitle());
     }
 }

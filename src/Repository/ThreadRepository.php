@@ -2,8 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Channel;
 use App\Entity\Thread;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,6 +19,20 @@ class ThreadRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Thread::class);
+    }
+
+    /**
+     * @param Channel|null $channel
+     * @return Query
+     */
+    public function getIndexQuery(?Channel $channel = null): Query
+    {
+        $queryBuilder = $this->createQueryBuilder("t")->orderBy('t.LastPostDate', 'DESC');
+        if ($channel) {
+            $queryBuilder->where("t.Channel = :Channel")->setParameter("Channel", $channel);
+        }
+
+        return $queryBuilder->getQuery();
     }
 
     // /**

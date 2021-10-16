@@ -28,7 +28,35 @@ class ForumRepository extends ServiceEntityRepository
             'Parent' => null
         ]);
     }
-    
+
+    /**
+     * @return Forum[]
+     */
+    public function getIndex(): array
+    {
+        return $this->getEntityManager()->createQuery(<<<DQL
+            SELECT category , forums , channel , lastThread , lastPost
+            FROM \App\Entity\Forum category
+            JOIN category.Children forums
+            JOIN forums.Channel channel
+            LEFT JOIN channel.Threads lastThread
+            WITH lastThread = FIRST(
+                SELECT thread
+                FROM \App\Entity\Thread thread
+                WHERE thread.Channel = channel
+                ORDER BY thread.id DESC
+            )
+            LEFT JOIN lastThread.Posts lastPost
+            WITH lastPost = FIRST(
+                SELECT post
+                FROM \App\Entity\Post post
+                WHERE post.Thread = lastThread
+                ORDER BY post.id DESC
+            )
+            WHERE category.Parent IS NULL
+        DQL)->execute();
+    }
+
     // /**
     //  * @return Forum[] Returns an array of Forum objects
     //  */

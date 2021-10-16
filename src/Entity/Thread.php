@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ThreadRepository;
+use App\Utilities\Slug;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -151,7 +152,7 @@ class Thread
      */
     public function getSlug(): string
     {
-        return "threadSlug";
+        return Slug::slugify($this->getTitle());
     }
 
     /**

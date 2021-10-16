@@ -11,13 +11,13 @@
 <div class="container">
     <div class="row">
         <main class="col-12">
-            <h1>
-                {{ forum.title }}
-                <a class="btn btn-primary btn-lg float-end" href="{{ path('forums_thread_new', {
-                    forum: forum.id,
-                    forumSlug: forum.slug
-                }) }}">New Thread</a>
-            </h1>
+            <h1>{{ forum.title }}</h1>
+
+            <a class="btn btn-primary btn-lg float-end" href="{{ path('forums_thread_new', {
+                forum: forum.id,
+                forumSlug: forum.slug
+            }) }}">New Thread</a>
+            {{ knp_pagination_render(threads) }}
 
             <div class="card border-primary mb-2">
                 <div class="card-header bg-primary text-white">

@@ -1,44 +1,44 @@
 {% extends "base.html.twig" %}
 
+{% block breadcrumbs %}
+    <li class="breadcrumb-item"><a href="{{ path('forums_index') }}">Forums</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('forums_forum_view', {forum: forum.id, forumSlug: forum.slug}) }}">
+            {{ forum.title }}
+        </a></li>
+    <li class="breadcrumb-item"><a href="{{ path('forums_thread_view', {
+            forum: forum.id,
+            forumSlug: forum.slug,
+            thread: thread.id,
+            threadSlug: thread.slug
+        }) }}">
+            {{ thread.title }}
+        </a></li>
+{% endblock %}
+
 {% block body %}
 <div class="container">
-    <div class="row">
-        <nav class="col-md-12">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('forums_index') }}">Forums</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('forums_forum_view', {forum: forum.id, forumSlug: forum.slug}) }}">
-                        {{ forum.title }}
-                    </a></li>
-                <li class="breadcrumb-item"><a href="{{ path('forums_thread_view', {
-                        forum: forum.id,
-                        forumSlug: forum.slug,
-                        thread: thread.id,
-                        threadSlug: thread.slug
-                    }) }}">
-                        {{ thread.title }}
-                    </a></li>
-            </ol>
-        </nav>
-    </div>
     <div class="row">
         <main class="col-md-12">
             <h1>{{ thread.title }}</h1>
             <p class="border-bottom">{{ thread.description }}</p>
 
             {% for post in posts %}
-                <article class="card mb-2">
+                <article class="card mb-2 border-secondary">
+                    <header class="card-header bg-secondary bg-opacity-50 rounded-0 text-white">
+                        <p class="m-0">Posted {{ post.datePosted|date }}</p>
+                    </header>
                     <div class="row">
-                        <aside class="col-md-3 border-end">
-
-                        </aside>
-                        <div class="col-md-9 ps-0">
-                            <header class="card-header">
-                                <p>Posted {{ post.datePosted|date }}</p>
-                            </header>
+                        <div class="col-2 border-end text-center pt-3">
+                            <i class="fs-1 bi bi-person-circle"></i>
+                            <address class="fs-4 bi" rel="author">{{ post.authorName }}</address>
+                        </div>
+                        <div class="col-10 ps-0">
                             <section class="card-body">
                                 {{ post.content }}
                             </section>
+{#                            <footer class="card-footer bg-light rounded-0">#}
+{#                                <button class="btn btn-primary btn-sm">Reply</button>#}
+{#                            </footer>#}
                         </div>
                     </div>
                 </article>
@@ -50,6 +50,8 @@
                 thread: thread.id,
                 threadSlug: thread.slug
             }) }}">Reply</a>
+
+            {{ knp_pagination_render(posts) }}
         </main>
     </div>
 </div>

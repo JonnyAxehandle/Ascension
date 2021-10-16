@@ -1,0 +1,18 @@
+<tr>
+    <th scope="row">
+        <a href="{{ path('forums_thread_view', {
+            forum: forum.id,
+            forumSlug: forum.slug,
+            thread: thread.id,
+            threadSlug: thread.slug
+        }) }}">
+            {{ thread.title }}
+        </a><br />
+        {{ thread.description }}
+    </th>
+    <td>
+        {{ thread.dateStarted|date }}<br />
+        by {{ thread.authorName }}
+    </td>
+    <td>{{ thread.lastPostDate|date }}</td>
+</tr>

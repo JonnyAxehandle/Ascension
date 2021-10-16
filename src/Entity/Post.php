@@ -19,7 +19,7 @@ class Post
     private ?int $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Thread::class)
+     * @ORM\ManyToOne(targetEntity=Thread::class, inversedBy="Posts")
      * @ORM\JoinColumn(nullable=false)
      */
     private ?Thread $Thread;
@@ -35,7 +35,7 @@ class Post
     private ?string $Content;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="datetime")
      */
     private ?\DateTimeInterface $DatePosted;
 

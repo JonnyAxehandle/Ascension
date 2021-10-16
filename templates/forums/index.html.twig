@@ -1,24 +1,26 @@
 {% extends "base.html.twig" %}
 
+{% block breadcrumbs %}
+    <li class="breadcrumb-item"><a href="{{ path('forums_index') }}">Forums</a></li>
+{% endblock %}
+
 {% block body %}
     <div class="container">
-        <div class="row">
-            <nav class="col-md-12">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{{ path('forums_index') }}">Forums</a></li>
-                </ol>
-            </nav>
-        </div>
         <div class="row">
             <main class="col-md-12">
                 <h1>Forums</h1>
                 {% for category in categories %}
-                    <section class="card mb-3">
-                        <header class="card-header">
-                            <h2 class="card-title m-0">{{ category.title }}</h2>
+                    <section class="card mb-3 border-primary">
+                        <header class="card-header bg-primary">
+                            <h2 class="card-title m-0 text-white">{{ category.title }}</h2>
                         </header>
                         <table class="table table-striped m-0">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th>Forum</th>
+                                    <th class="col-3">Last Post</th>
+                                </tr>
+                            </thead>
                             <tbody>
                             {% for forum in category.children %}
                                 <tr>
@@ -26,6 +28,21 @@
                                         <a href="{{ path('forums_forum_view', {forum: forum.id, forumSlug: forum.slug}) }}">
                                             {{ forum.title }}
                                         </a>
+                                    </td>
+                                    <td>
+                                        {% if forum.channel.threads|length > 0 %}
+                                            in <a href="{{ path('forums_thread_view', {
+                                                forum: forum.id,
+                                                forumSlug: forum.slug,
+                                                thread: forum.channel.threads[0].id,
+                                                threadSlug: forum.channel.threads[0].slug
+                                            }) }}">
+                                                {{ forum.channel.threads[0].title }}
+                                            </a><br />
+                                            by {{ forum.channel.threads[0].posts[0].AuthorName }}, {{ forum.channel.threads[0].posts[0].DatePosted|date }}
+                                        {% else %}
+                                            Never
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}

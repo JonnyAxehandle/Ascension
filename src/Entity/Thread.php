@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ThreadRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -16,7 +18,7 @@ class Thread
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id;
 
     /**
      * @ORM\ManyToOne(targetEntity=Channel::class)
@@ -40,19 +42,31 @@ class Thread
     private ?string $AuthorName;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="datetime")
      */
     private ?\DateTimeInterface $DateStarted;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="datetime")
      */
     private ?\DateTimeInterface $LastPostDate;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Channel::class, inversedBy="Threads")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private ?Channel $channel;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Post::class, mappedBy="Thread")
+     */
+    private Collection $Posts;
 
     public function __construct()
     {
         $this->DateStarted = new \DateTime();
         $this->LastPostDate = new \DateTime();
+        $this->Posts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -138,5 +152,37 @@ class Thread
     public function getSlug(): string
     {
         return "threadSlug";
+    }
+
+    /**
+     * @return Collection|Post[]
+     */
+    public function getPosts(): Collection
+    {
+        return $this->Posts;
+    }
+
+    public function addPost(Post $post): self
+    {
+        if (!$this->Posts->contains($post)) {
+            $this->Posts[] = $post;
+            $post->setThread($this);
+
+            $this->setLastPostDate($post->getDatePosted());
+        }
+
+        return $this;
+    }
+
+    public function removePost(Post $post): self
+    {
+        if ($this->Posts->removeElement($post)) {
+            // set the owning side to null (unless already changed)
+            if ($post->getThread() === $this) {
+                $post->setThread(null);
+            }
+        }
+
+        return $this;
     }
 }

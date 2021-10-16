@@ -119,7 +119,7 @@ class Forum
     }
 
     #[Pure]
-    public function isChannel(): bool
+    public function isCategory(): bool
     {
         return $this->getParent() == null;
     }

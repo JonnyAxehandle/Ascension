@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class HomeController extends AbstractController
 {
-    #[Route("/")]
+    #[Route("/", name: 'home')]
     public function index(): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         return $this->redirectToRoute('forums_index');

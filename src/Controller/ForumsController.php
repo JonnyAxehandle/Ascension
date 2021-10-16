@@ -11,7 +11,9 @@ use App\Repository\ForumRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use JetBrains\PhpStorm\ArrayShape;
+use Knp\Component\Pager\PaginatorInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -41,6 +43,7 @@ class ForumsController extends AbstractController
      * @var EntityManagerInterface
      */
     private EntityManagerInterface $entityManager;
+    private PaginatorInterface $paginator;
 
     /**
      * ForumsController constructor.
@@ -51,12 +54,14 @@ class ForumsController extends AbstractController
     public function __construct(ForumRepository $forumRepository,
                                 ThreadRepository $threadRepository,
                                 PostRepository $postRepository,
-                                EntityManagerInterface $entityManager)
+                                EntityManagerInterface $entityManager,
+                                PaginatorInterface $paginator)
     {
         $this->forumRepository = $forumRepository;
         $this->threadRepository = $threadRepository;
         $this->postRepository = $postRepository;
         $this->entityManager = $entityManager;
+        $this->paginator = $paginator;
     }
 
     #[ArrayShape(['categories' => "\App\Entity\Forum[]"])]
@@ -64,24 +69,56 @@ class ForumsController extends AbstractController
     #[Template("forums/index.html.twig")]
     public function index(): array
     {
+        // SELECT u FROM User u JOIN u.address a WHERE a.city = 'Berlin'
+        $query = $this->entityManager->createQuery(<<<DQL
+            SELECT category , forums , channel , lastThread , lastPost
+            FROM \App\Entity\Forum category
+            JOIN category.Children forums
+            JOIN forums.Channel channel
+            LEFT JOIN channel.Threads lastThread
+            WITH lastThread = FIRST(
+                SELECT thread
+                FROM \App\Entity\Thread thread
+                WHERE thread.Channel = channel
+                ORDER BY thread.id DESC
+            )
+            LEFT JOIN lastThread.Posts lastPost
+            WITH lastPost = FIRST(
+                SELECT post
+                FROM \App\Entity\Post post
+                WHERE post.Thread = lastThread
+                ORDER BY post.id DESC
+            )
+            WHERE category.Parent IS NULL
+        DQL);
+
         // TODO: Filter by user view permissions
         return [
-            'categories' => $this->forumRepository->findCategories()
+            'categories' => $query->execute()
         ];
     }
 
-    #[ArrayShape(['forum' => "\App\Entity\Forum", 'threads' => "\App\Entity\Thread[]"])]
+    #[ArrayShape(['forum' => "\App\Entity\Forum", 'threads' => "\Knp\Component\Pager\Pagination\PaginationInterface", 'pinnedThreads' => "\App\Entity\Thread[]"])]
     #[Route("/{forum}-{forumSlug}", name: "forum_view")]
     #[Template("forums/forum_view.html.twig")]
     public function viewForum(Request $request, Forum $forum, string $forumSlug): array
     {
-        // TODO: Thread pagination
         // TODO: Slug validation
+        // TODO: Sort options
+        $threadQuery = $this->threadRepository->createQueryBuilder("t")
+            ->where("t.Channel = :Channel")
+            ->setParameter("Channel", $forum->getChannel())
+            ->orderBy('t.LastPostDate', 'DESC');
+        $threads = $this->paginator->paginate($threadQuery, $request->query->getInt('page', 1), 10);
+
+        // TODO: Pinned threads
+        /** @var Thread[] $pinnedThreads */
+        $pinnedThreads = [];
+
         return [
             'forum' => $forum,
-            'threads' => $this->threadRepository->findBy([
-                'Channel' => $forum->getChannel()
-            ])
+            'threads' => $threads,
+            'pinnedThreads' => $pinnedThreads
         ];
     }
 
@@ -125,16 +162,20 @@ class ForumsController extends AbstractController
     #[ArrayShape(['forum' => "\App\Entity\Forum", 'thread' => "\App\Entity\Thread", 'posts' => "\App\Entity\Post[]"])]
     #[Route("/{forum}-{forumSlug}/{thread}-{threadSlug}", name: "thread_view")]
     #[Template("forums/thread_view.html.twig")]
-    public function viewThread(Forum $forum, string $forumSlug, Thread $thread, string $threadSlug): array
+    public function viewThread(Request $request, Forum $forum, string $forumSlug, Thread $thread, string $threadSlug): array
     {
-        // TODO: Post pagination
+        $postQuery = $this->postRepository->createQueryBuilder('p')
+            ->where("p.Thread = :Thread")
+            ->setParameter("Thread", $thread)
+            ->orderBy("p.DatePosted", "ASC");
+
+        $posts = $this->paginator->paginate($postQuery, $request->query->getInt('page', 1), 10);
+
         // TODO: Slug validation
         return [
             'forum' => $forum,
             'thread' => $thread,
-            'posts' => $this->postRepository->findBy([
-                'Thread' => $thread
-            ])
+            'posts' => $posts
         ];
     }
 
@@ -149,9 +190,10 @@ class ForumsController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var Post $post */
             $post = $form->getData();
-            $post->setThread($thread);
+            $thread->addPost($post);
 
             $this->entityManager->persist($post);
+            $this->entityManager->persist($thread);
             $this->entityManager->flush();
 
             return $this->redirectToRoute('forums_thread_view', [
